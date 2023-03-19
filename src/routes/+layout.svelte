@@ -2,6 +2,15 @@
   import "../app.postcss";
   import Header from "./Header.svelte";
   import "./styles.css";
+
+  import { Buffer } from "buffer";
+  import process from "process";
+	import { onMount } from "svelte";
+
+  onMount(() => {
+    window.Buffer = Buffer;
+    window.process = process;
+  })
 </script>
 
 <div class="app">

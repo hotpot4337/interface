@@ -9,6 +9,7 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch"
   },
   "devDependencies": {
+    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
     "@fontsource/fira-mono": "^4.5.10",
     "@neoconfetti/svelte": "^1.0.0",
     "@sveltejs/adapter-auto": "^2.0.0",
@@ -17,17 +18,23 @@
     "autoprefixer": "^10.4.7",
     "postcss": "^8.4.14",
     "postcss-load-config": "^4.0.1",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-polyfills": "^0.2.1",
     "svelte": "^3.54.0",
     "svelte-check": "^3.0.1",
     "svelte-preprocess": "^4.10.7",
     "tailwindcss": "^3.1.5",
     "typescript": "^4.9.3",
-    "vite": "^4.0.0"
+    "vite": "^4.0.0",
+    "vite-plugin-web3-polyfill": "^0.0.4"
   },
   "type": "module",
   "dependencies": {
     "@openzeppelin/merkle-tree": "^1.0.2",
     "@popperjs/core": "^2.11.6",
+    "@web3auth/base": "^5.0.1",
+    "@web3auth/modal": "^5.0.1",
+    "@web3auth/no-modal": "^5.0.1",
     "arale-qrcode": "^3.0.5",
     "classnames": "^2.3.2",
     "ethers": "^6.0.8",
