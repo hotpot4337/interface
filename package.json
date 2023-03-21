@@ -8,7 +8,7 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
     "lint": "prettier --plugin-search-dir . --check . && eslint .",
-		"format": "prettier --plugin-search-dir . --write ."
+    "format": "prettier --plugin-search-dir . --write ."
   },
   "devDependencies": {
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
@@ -17,14 +17,14 @@
     "@sveltejs/adapter-auto": "^2.0.0",
     "@sveltejs/kit": "^1.5.0",
     "@types/cookie": "^0.5.1",
-    "eslint": "^8.28.0",
-		"eslint-config-prettier": "^8.5.0",
-		"eslint-plugin-svelte3": "^4.0.0",
-		"prettier": "^2.8.0",
-		"prettier-plugin-svelte": "^2.8.1",
     "autoprefixer": "^10.4.7",
+    "eslint": "^8.28.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-svelte3": "^4.0.0",
     "postcss": "^8.4.14",
     "postcss-load-config": "^4.0.1",
+    "prettier": "^2.8.0",
+    "prettier-plugin-svelte": "^2.8.1",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-polyfills": "^0.2.1",
     "svelte": "^3.54.0",
@@ -37,6 +37,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@account-abstraction/sdk": "^0.5.0",
     "@openzeppelin/merkle-tree": "^1.0.2",
     "@popperjs/core": "^2.11.6",
     "@web3auth/base": "^5.0.1",
@@ -44,7 +45,7 @@
     "@web3auth/no-modal": "^5.0.1",
     "arale-qrcode": "^3.0.5",
     "classnames": "^2.3.2",
-    "ethers": "^6.0.8",
+    "ethers": "^5.7.2",
     "flowbite": "^1.6.3",
     "flowbite-svelte": "^0.30.6",
     "svelte-local-storage-store": "^0.4.0"

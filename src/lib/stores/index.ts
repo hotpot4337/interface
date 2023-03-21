@@ -1,4 +1,4 @@
-import { JsonRpcProvider, Wallet } from 'ethers';
+import { Wallet } from 'ethers';
 import { persisted } from 'svelte-local-storage-store';
 import { derived, writable, type Writable } from 'svelte/store';
 import { ethers } from 'ethers';
@@ -16,7 +16,7 @@ export const wallet = derived(privKey, ($privKey) => {
 export const web3auth: Writable<Web3Auth> = writable();
 export const signer = derived(web3auth, async ($web3auth) => {
 	if (!$web3auth?.provider) return;
-	const provider = new ethers.BrowserProvider($web3auth.provider);
+	const provider = new ethers.providers.Web3Provider($web3auth.provider);
 	const signer = await provider.getSigner();
 	return signer;
 });
