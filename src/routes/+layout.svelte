@@ -8,7 +8,7 @@
 	import { onMount } from 'svelte';
 
 	import type { Web3AuthOptions } from '@web3auth/modal';
-	import { privKey, web3auth } from '$lib/stores';
+	import { web3auth, userData } from '$lib/stores';
 
 	onMount(async () => {
 		window.Buffer = Buffer;
@@ -35,19 +35,15 @@
 		const w3a = new Web3Auth(w3aOptions);
 		await w3a.initModal();
 		$web3auth = w3a;
+		$userData = await w3a.getUserInfo();
+
 		w3a.on('disconnected', () => {
-			$privKey = '';
+			$userData = undefined;
+			$web3auth = w3a;
 		});
 		w3a.on('connected', async () => {
-			if (!w3a?.provider) return ($privKey = '');
-			const privateKey: Maybe<string> = await w3a.provider.request({
-				method: 'eth_private_key'
-			});
-			if (privateKey) {
-				$privKey = privateKey;
-			} else {
-				$privKey = '';
-			}
+			$web3auth = w3a;
+			$userData = await w3a.getUserInfo();
 		});
 	});
 </script>

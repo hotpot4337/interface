@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { privKey, wallet, web3auth, signer } from '$lib/stores';
+	import { privKey, wallet, web3auth, provider, userData } from '$lib/stores';
 	import { Button, Heading } from 'flowbite-svelte';
 	import { ethers, Wallet } from 'ethers';
 	import { onMount } from 'svelte';
@@ -65,8 +65,8 @@
 </script>
 
 <section class="text-center mt-24">
-	{#if $wallet}
-		{$wallet.address}
+	{#if $userData}
+		{$userData?.name}
 		<Button on:click={() => $web3auth?.logout()} color="red" size="sm">Logout</Button>
 		<Button on:click={getAccountAddress} size="sm">Get address</Button>
 		<div>
