@@ -66,7 +66,6 @@
 
 <section class="text-center mt-24">
 	{#if $userData}
-		{$userData?.name}
 		<Button on:click={() => $web3auth?.logout()} color="red" size="sm">Logout</Button>
 		<Button on:click={getAccountAddress} size="sm">Get address</Button>
 		<div>

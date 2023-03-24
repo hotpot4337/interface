@@ -13,7 +13,7 @@ export const wallet = derived(privKey, ($privKey) => {
 });
 
 export const web3auth: Writable<Web3Auth> = writable();
-export const userData: Writable<UserInfo | undefined> = persisted('user', undefined);
+export const userData: Writable<Partial<UserInfo> | undefined> = persisted('user', undefined);
 export const provider = derived(web3auth, ($web3auth) => {
 	if (!$web3auth?.provider) return;
 	const provider = new ethers.providers.Web3Provider($web3auth.provider);

@@ -2,6 +2,7 @@
 	import '../app.postcss';
 	import Header from './Header.svelte';
 	import './styles.css';
+	import github from '$lib/images/github.svg';
 
 	import { Buffer } from 'buffer';
 	import process from 'process';
@@ -56,7 +57,10 @@
 	</main>
 
 	<footer>
-		<p>Created at Scaling Ethereum 2023 hackathon</p>
+		<a href="https://github.com/" class="flex items-center text-sm gap-1">
+			<img src={github} alt="GitHub" class="w-6" />
+			Created at Scaling Ethereum 2023 hackathon
+		</a>
 	</footer>
 </div>
 
