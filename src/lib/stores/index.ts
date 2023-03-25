@@ -8,7 +8,7 @@ import type { HttpRpcClient } from '@account-abstraction/sdk/dist/src/HttpRpcCli
 import type { ComplexAccountAPI } from '$packages/ComplexAccountAPI';
 
 export const web3auth: Writable<Web3Auth> = writable();
-export const userData: Writable<Partial<UserInfo> | undefined> = persisted('user', undefined);
+export const userData: Writable<Partial<UserInfo> | null> = persisted('user', null);
 export const provider = derived(web3auth, ($web3auth) => {
 	if (!$web3auth?.provider) return;
 	const provider = new ethers.providers.Web3Provider($web3auth.provider);
@@ -22,8 +22,10 @@ export const rpcClient: Writable<HttpRpcClient> = writable();
 web3auth.subscribe(async (web3auth) => {
 	if (!browser) return;
 	if (!web3auth?.provider) return;
-	const { HttpRpcClient } = await import('@account-abstraction/sdk');
-	const { ComplexAccountAPI } = await import('$packages/ComplexAccountAPI');
+	const [{ HttpRpcClient }, { ComplexAccountAPI }] = await Promise.all([
+		import('@account-abstraction/sdk'),
+		import('$packages/ComplexAccountAPI')
+	]);
 
 	const provider = new ethers.providers.Web3Provider(web3auth.provider);
 

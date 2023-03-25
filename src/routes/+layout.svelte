@@ -41,9 +41,10 @@
 		$userData = await w3a.getUserInfo();
 
 		w3a.on('disconnected', () => {
-			$userData = undefined;
+			$userData = null;
 			$web3auth = w3a;
 		});
+
 		w3a.on('connected', async () => {
 			$web3auth = w3a;
 			$userData = await w3a.getUserInfo();
