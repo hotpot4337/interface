@@ -10,16 +10,20 @@
 		Button,
 		Chevron,
 		Dropdown,
-		DropdownItem
+		DropdownItem,
+		Span
 	} from 'flowbite-svelte';
 	import { userData, web3auth } from '$lib/stores';
 </script>
 
 <Navbar let:hidden let:toggle class="!bg-transparent">
 	<NavBrand href="/">
-		<span class="self-center whitespace-nowrap text-xl font-semibold dark:text-white !text-blue">
-			AADefi
-		</span>
+		<Span
+			class="self-center whitespace-nowrap text-xl font-semibold dark:text-white !text-blue"
+			gradient
+		>
+			Magik
+		</Span>
 	</NavBrand>
 	<div class="flex md:order-2">
 		{#if $userData?.name}
