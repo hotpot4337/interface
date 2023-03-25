@@ -1,12 +1,11 @@
-import { Wallet } from 'ethers';
 import { persisted } from 'svelte-local-storage-store';
 import { derived, writable, type Writable } from 'svelte/store';
 import { ethers } from 'ethers';
 import type { Web3Auth } from '@web3auth/modal';
 import type { UserInfo } from '@web3auth/base';
 import { browser } from '$app/environment';
-import type { SimpleAccountAPI } from '@account-abstraction/sdk/dist/src/SimpleAccountAPI';
 import type { HttpRpcClient } from '@account-abstraction/sdk/dist/src/HttpRpcClient';
+import type { ComplexAccountAPI } from '$packages/ComplexAccountAPI';
 
 export const web3auth: Writable<Web3Auth> = writable();
 export const userData: Writable<Partial<UserInfo> | undefined> = persisted('user', undefined);
@@ -16,14 +15,16 @@ export const provider = derived(web3auth, ($web3auth) => {
 	return provider;
 });
 
-export const accountApi: Writable<SimpleAccountAPI> = writable();
+export const accountApi: Writable<ComplexAccountAPI> = writable();
 export const accountAddr: Writable<string> = writable();
 export const rpcClient: Writable<HttpRpcClient> = writable();
 
 web3auth.subscribe(async (web3auth) => {
 	if (!browser) return;
-	if (!web3auth.provider) return;
-	const { SimpleAccountAPI, HttpRpcClient } = await import('@account-abstraction/sdk');
+	if (!web3auth?.provider) return;
+	const { HttpRpcClient } = await import('@account-abstraction/sdk');
+	const { ComplexAccountAPI } = await import('$packages/ComplexAccountAPI');
+
 	const provider = new ethers.providers.Web3Provider(web3auth.provider);
 
 	const config = {
@@ -34,17 +35,30 @@ web3auth.subscribe(async (web3auth) => {
 		bundlerUrl: 'http://localhost:3000/rpc'
 	};
 
-	const accApi = new SimpleAccountAPI({
+	// const accApi = new SimpleAccountAPI({
+	// 	provider,
+	// 	entryPointAddress: config.entryPoint,
+	// 	owner: provider.getSigner(),
+	// 	factoryAddress: config.simpleAccountFactory
+	// })
+
+	const merkleRoot = ethers.utils.formatBytes32String('TEST');
+	const accApi = new ComplexAccountAPI({
 		provider,
+		merkleRoot,
 		entryPointAddress: config.entryPoint,
 		owner: provider.getSigner(),
-		factoryAddress: config.simpleAccountFactory
+		factoryAddress: '0x1bdb5bd11e347c68eb7000246d046033Cb6DEc7F'
 	});
 
 	accountApi.set(accApi);
 
-	const accAddr = await accApi.getCounterFactualAddress();
-	accountAddr.set(accAddr);
+	try {
+		const accAddr = await accApi.getCounterFactualAddress();
+		accountAddr.set(accAddr);
+	} catch (err) {
+		console.log(err, ':((CC((');
+	}
 
 	const chainId = await provider.getNetwork().then((net) => net.chainId);
 	rpcClient.set(new HttpRpcClient(config.bundlerUrl, config.entryPoint, chainId));
