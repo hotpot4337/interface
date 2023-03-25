@@ -39,7 +39,7 @@
 				<div slot="header" class="px-4 py-2">
 					<span class="block text-sm text-gray-900 dark:text-white">{$userData.email}</span>
 				</div>
-				<DropdownItem>My wallet</DropdownItem>
+				<DropdownItem href="wallet">My wallet</DropdownItem>
 				<DropdownItem>Settings</DropdownItem>
 				<DropdownItem slot="footer" class="text-red-600" on:click={() => $web3auth?.logout()}
 					>Log out</DropdownItem
