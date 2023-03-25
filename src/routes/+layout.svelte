@@ -1,6 +1,8 @@
 <script lang="ts">
 	import '../app.postcss';
 	import Header from './Header.svelte';
+	import { Toaster } from 'svelte-french-toast';
+
 	import './styles.css';
 	import github from '$lib/images/github.svg';
 
@@ -49,6 +51,7 @@
 	});
 </script>
 
+<Toaster />
 <div class="app">
 	<Header />
 

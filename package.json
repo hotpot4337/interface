@@ -48,6 +48,7 @@
     "ethers": "^5.7.2",
     "flowbite": "^1.6.3",
     "flowbite-svelte": "^0.30.6",
+    "svelte-french-toast": "^1.0.4-beta.0",
     "svelte-local-storage-store": "^0.4.0"
   }
 }

@@ -2,9 +2,10 @@
 	import { web3auth, accountApi, rpcClient, userData, accountAddr, provider } from '$lib/stores';
 	import { Button, Heading } from 'flowbite-svelte';
 	import { ethers, Wallet } from 'ethers';
-	import { onMount } from 'svelte';
 	import { formatEther } from 'ethers/lib/utils';
+	import toast from 'svelte-french-toast';
 
+	$: balance = $provider;
 	async function transfer() {
 		if (!$accountApi || !$rpcClient) return;
 		const target = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
@@ -21,6 +22,7 @@
 
 		console.log('Waiting for transaction...');
 		const txHash = await $accountApi.getUserOpReceipt(uoHash);
+
 		console.log(`Transaction hash: ${txHash}`);
 	}
 </script>
@@ -41,7 +43,14 @@
 			</p>
 		</div>
 		<p>This wallet must contain eth to execute UserOps (unless a Paymaster is active)</p>
-		<Button on:click={transfer}>Transfer</Button>
+		<Button
+			on:click={() =>
+				toast.promise(transfer(), {
+					loading: 'Transfering...',
+					success: 'Trasaction successful!',
+					error: 'Error sending transfer'
+				})}>Transfer</Button
+		>
 	{:else}
 		<Heading tag="h1" class="text-xl mb-2">Your magic wallet is one click away</Heading>
 		<p class="max-w-xl m-auto mb-4">Login with any method to access your wallet.</p>
