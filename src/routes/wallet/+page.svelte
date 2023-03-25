@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { web3auth, accountApi, rpcClient, userData, accountAddr, provider } from '$lib/stores';
 	import { Button, Heading } from 'flowbite-svelte';
-	import { ethers, Wallet } from 'ethers';
+	import { ethers } from 'ethers';
 	import { formatEther } from 'ethers/lib/utils';
 	import toast from 'svelte-french-toast';
 
@@ -25,6 +25,33 @@
 
 		console.log(`Transaction hash: ${txHash}`);
 	}
+
+	async function mintWETH() {
+		if (!$accountApi || !$rpcClient || !$provider) return;
+		const WETH_ABI = [
+			'function deposit() external payable',
+			'function approve(address spender, uint amount) external'
+		];
+		const wethAddr = '0x77d2723a1824D891188Fcc7bA7eE7A0516319b51';
+		const weth = new ethers.Contract(wethAddr, WETH_ABI, $provider);
+		const amount = '0.5';
+		const value = ethers.utils.parseEther(amount);
+
+		console.log(`Wrapping ${amount} ETH ...`);
+		const op = await $accountApi.createSignedUserOp({
+			target: weth.address,
+			value,
+			data: weth.interface.encodeFunctionData('deposit')
+		});
+
+		const uoHash = await $rpcClient.sendUserOpToBundler(op);
+		console.log(`UserOpHash: ${uoHash}`);
+
+		console.log('Waiting for transaction...');
+		const txHash = await $accountApi.getUserOpReceipt(uoHash);
+
+		console.log(`Transaction hash: ${txHash}`);
+	}
 </script>
 
 <section class="text-center mt-24">
@@ -33,13 +60,13 @@
 			Your wallet address:
 			<b>{$accountAddr ?? '---'} </b>
 			<p>
-				{#await $provider?.getBalance($accountAddr)}
-					---
-				{:then value}
-					Balance: {value ? formatEther(value) : '---'} ETH
-				{:catch error}
-					error :(
-				{/await}
+				{#if $accountAddr}
+					{#await $provider?.getBalance($accountAddr)}
+						---
+					{:then value}
+						Balance: {value ? formatEther(value) : '---'} ETH
+					{/await}
+				{/if}
 			</p>
 		</div>
 		<p>This wallet must contain eth to execute UserOps (unless a Paymaster is active)</p>
@@ -49,7 +76,15 @@
 					loading: 'Transfering...',
 					success: 'Trasaction successful!',
 					error: 'Error sending transfer'
-				})}>Transfer</Button
+				})}>Transfer 1 ETH</Button
+		>
+		<Button
+			on:click={() =>
+				toast.promise(mintWETH(), {
+					loading: 'Minting WETH...',
+					success: 'Trasaction successful!',
+					error: 'Error sending transfer'
+				})}>Mint 0.5 WETH</Button
 		>
 	{:else}
 		<Heading tag="h1" class="text-xl mb-2">Your magic wallet is one click away</Heading>
