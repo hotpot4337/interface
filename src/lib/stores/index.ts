@@ -6,9 +6,15 @@ import type { UserInfo } from '@web3auth/base';
 import { browser } from '$app/environment';
 import type { HttpRpcClient } from '@account-abstraction/sdk/dist/src/HttpRpcClient';
 import type { ComplexAccountAPI } from '$packages/ComplexAccountAPI';
+import type { StandardMerkleTree } from '@openzeppelin/merkle-tree';
 
 export const web3auth: Writable<Web3Auth> = writable();
 export const userData: Writable<Partial<UserInfo> | null> = persisted('user', null);
+export const merkleTree: Writable<StandardMerkleTree<String[]> | null> = persisted(
+	'merkleTree',
+	null
+);
+
 export const provider = derived(web3auth, ($web3auth) => {
 	if (!$web3auth?.provider) return;
 	const provider = new ethers.providers.Web3Provider($web3auth.provider);
@@ -44,23 +50,24 @@ web3auth.subscribe(async (web3auth) => {
 	// 	factoryAddress: config.simpleAccountFactory
 	// })
 
-	const merkleRoot = ethers.utils.formatBytes32String('TEST');
-	const accApi = new ComplexAccountAPI({
-		provider,
-		merkleRoot,
-		entryPointAddress: config.entryPoint,
-		owner: provider.getSigner(),
-		factoryAddress: '0x1bdb5bd11e347c68eb7000246d046033Cb6DEc7F'
+	merkleTree.subscribe(async (tree) => {
+		if (!tree) return;
+		const accApi = new ComplexAccountAPI({
+			provider,
+			merkleRoot: tree.root,
+			entryPointAddress: config.entryPoint,
+			owner: provider.getSigner(),
+			factoryAddress: '0xea6AD1f5c2aC92E872EFd1DB2eF02157C875c16C'
+		});
+
+		accountApi.set(accApi);
+		try {
+			const accAddr = await accApi.getCounterFactualAddress();
+			accountAddr.set(accAddr);
+		} catch (err) {
+			console.log(err, ':((CC((');
+		}
 	});
-
-	accountApi.set(accApi);
-
-	try {
-		const accAddr = await accApi.getCounterFactualAddress();
-		accountAddr.set(accAddr);
-	} catch (err) {
-		console.log(err, ':((CC((');
-	}
 
 	const chainId = await provider.getNetwork().then((net) => net.chainId);
 	rpcClient.set(new HttpRpcClient(config.bundlerUrl, config.entryPoint, chainId));

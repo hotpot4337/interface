@@ -1,5 +1,13 @@
 <script lang="ts">
-	import { web3auth, accountApi, rpcClient, userData, accountAddr, provider } from '$lib/stores';
+	import {
+		web3auth,
+		accountApi,
+		rpcClient,
+		userData,
+		merkleTree,
+		accountAddr,
+		provider
+	} from '$lib/stores';
 	import { Button, Heading, Modal } from 'flowbite-svelte';
 	import { ethers } from 'ethers';
 	import { formatEther, solidityKeccak256 } from 'ethers/lib/utils';
@@ -80,7 +88,7 @@
 		const code = totp.genOTP();
 		totpUrl = `otpauth://totp/${$userData?.email}?issuer=magik&secret=${key}`;
 		isOpen = true;
-		genMerkle(16);
+		$merkleTree = genMerkle(16);
 	}
 
 	function genMerkle(n: number) {
@@ -114,63 +122,66 @@
 
 <section class="text-center mt-24">
 	{#if $userData}
-		<div>
-			Your wallet address:
-			<b>{$accountAddr ?? '---'} </b>
-			<p>
-				{#if $accountAddr}
-					{#await $provider?.getBalance($accountAddr)}
-						---
-					{:then value}
-						Balance: {value ? formatEther(value) : '---'} ETH
-					{/await}
-					{#await isDeployed() then isDeployed}
-						{#if isDeployed}
-							x
-						{/if}
-					{:catch error}
-						{error.msg}
-					{/await}
-				{/if}
-			</p>
-		</div>
-		<p>This wallet must contain eth to execute UserOps (unless a Paymaster is active)</p>
-		<Button
-			on:click={() =>
-				toast.promise(transfer(), {
-					loading: 'Transfering...',
-					success: 'Trasaction successful!',
-					error: 'Error sending transfer'
-				})}>Transfer 1 ETH</Button
-		>
-		<Button
-			on:click={() =>
-				toast.promise(mintWETH(), {
-					loading: 'Minting WETH...',
-					success: 'Trasaction successful!',
-					error: 'Error sending transfer'
-				})}>Mint 0.5 WETH</Button
-		>
-		<Button on:click={initModal}>Create wallet</Button>
-		<Modal title="Setup 2fa" bind:open={isOpen} autoclose>
-			<p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-				Scan the following QR code with your authenticator app
-			</p>
+		{#if $merkleTree}
+			<div>
+				Your wallet address:
+				<b>{$accountAddr ?? '---'} </b>
+				<p>
+					{#if $accountAddr}
+						{#await $provider?.getBalance($accountAddr)}
+							---
+						{:then value}
+							Balance: {value ? formatEther(value) : '---'} ETH
+						{/await}
+						{#await isDeployed() then isDeployed}
+							{#if isDeployed}
+								x
+							{/if}
+						{:catch error}
+							{error.msg}
+						{/await}
+					{/if}
+				</p>
+			</div>
+			<p>This wallet must contain eth to execute UserOps (unless a Paymaster is active)</p>
+			<Button
+				on:click={() =>
+					toast.promise(transfer(), {
+						loading: 'Transfering...',
+						success: 'Trasaction successful!',
+						error: 'Error sending transfer'
+					})}>Transfer 1 ETH</Button
+			>
+			<Button
+				on:click={() =>
+					toast.promise(mintWETH(), {
+						loading: 'Minting WETH...',
+						success: 'Trasaction successful!',
+						error: 'Error sending transfer'
+					})}>Mint 0.5 WETH</Button
+			>
+		{:else}
+			<Button on:click={initModal}>Create wallet</Button>
+			<Modal title="Setup 2fa" bind:open={isOpen} autoclose>
+				<p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
+					Scan the following QR code with your authenticator app
+				</p>
 
-			<QRCodeImage text={totpUrl} width={1000} margin={0} displayClass="w-48 mx-auto" />
-			<OtpInput
-				numberOfInputs={6}
-				customRowClass="inline-flex items-center "
-				customTextInputClass="w-10"
-				customInputWrapperClass="w-10"
-				customSeparatorClass="px-2"
-				bind:this={otpInstance}
-				on:notify={() => (isTotpValid = totp.verify(otpInstance?.getValue().completevalue))}
-			/>
-			<svelte:fragment slot="footer">
-				<Button on:click={() => {}} disabled={!isTotpValid}>Done</Button>
-			</svelte:fragment>
-		</Modal>
+				<QRCodeImage text={totpUrl} width={1000} margin={0} displayClass="w-48 mx-auto" />
+				<OtpInput
+					numberOfInputs={6}
+					customRowClass="inline-flex items-center "
+					customTextInputClass="w-10"
+					customInputWrapperClass="w-10"
+					customSeparatorClass="px-2"
+					bind:this={otpInstance}
+					on:notify={() => (isTotpValid = totp.verify(otpInstance?.getValue().completevalue))}
+				/>
+				<svelte:fragment slot="footer">
+					<Button on:click={() => {}} disabled={!isTotpValid}>Done</Button>
+				</svelte:fragment>
+			</Modal>
+		{/if}
 	{:else}
 		<Heading tag="h1" class="text-xl mb-2">Your magic wallet is one click away</Heading>
 		<p class="max-w-xl m-auto mb-4">Login with any method to access your wallet.</p>
