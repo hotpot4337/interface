@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { web3auth, accountApi, rpcClient, userData, accountAddr, provider } from '$lib/stores';
-	import { Button, Heading } from 'flowbite-svelte';
+	import { Button, Heading, Modal } from 'flowbite-svelte';
 	import { ethers } from 'ethers';
 	import { formatEther } from 'ethers/lib/utils';
 	import toast from 'svelte-french-toast';
+	import { QRCodeImage } from 'svelte-qrcode-image';
 
-	$: balance = $provider;
+	let isOpen = false;
 	async function transfer() {
 		if (!$accountApi || !$rpcClient) return;
 		const target = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
@@ -52,6 +53,15 @@
 
 		console.log(`Transaction hash: ${txHash}`);
 	}
+
+	async function isDeployed() {
+		if (!$provider || !$accountAddr) return;
+		const bytecode = await $provider.getCode($accountAddr);
+		if (bytecode === '0x') {
+			return false;
+		}
+		return bytecode !== '0x' ? true : false;
+	}
 </script>
 
 <section class="text-center mt-24">
@@ -65,6 +75,13 @@
 						---
 					{:then value}
 						Balance: {value ? formatEther(value) : '---'} ETH
+					{/await}
+					{#await isDeployed() then isDeployed}
+						{#if isDeployed}
+							x
+						{/if}
+					{:catch error}
+						{error.msg}
 					{/await}
 				{/if}
 			</p>
@@ -86,6 +103,17 @@
 					error: 'Error sending transfer'
 				})}>Mint 0.5 WETH</Button
 		>
+		<Button on:click={() => (isOpen = true)}>Default modal</Button>
+		<Modal title="Setup 2fa" bind:open={isOpen} autoclose>
+			<p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
+				Scan the following QR code with your authenticator app
+			</p>
+
+			<QRCodeImage text="hi" width={1000} margin={0} displayClass="w-48 mx-auto" />
+			<svelte:fragment slot="footer">
+				<Button on:click={() => alert('Handle "success"')}>Done</Button>
+			</svelte:fragment>
+		</Modal>
 	{:else}
 		<Heading tag="h1" class="text-xl mb-2">Your magic wallet is one click away</Heading>
 		<p class="max-w-xl m-auto mb-4">Login with any method to access your wallet.</p>
