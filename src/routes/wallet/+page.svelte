@@ -5,8 +5,11 @@
 	import { formatEther } from 'ethers/lib/utils';
 	import toast from 'svelte-french-toast';
 	import { QRCodeImage } from 'svelte-qrcode-image';
+	import OtpInput from 'svelte-otp';
 
 	let isOpen = false;
+	let otpInstance: any;
+
 	async function transfer() {
 		if (!$accountApi || !$rpcClient) return;
 		const target = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
@@ -103,15 +106,23 @@
 					error: 'Error sending transfer'
 				})}>Mint 0.5 WETH</Button
 		>
-		<Button on:click={() => (isOpen = true)}>Default modal</Button>
+		<Button on:click={() => (isOpen = true)}>Create wallet</Button>
 		<Modal title="Setup 2fa" bind:open={isOpen} autoclose>
 			<p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
 				Scan the following QR code with your authenticator app
 			</p>
 
 			<QRCodeImage text="hi" width={1000} margin={0} displayClass="w-48 mx-auto" />
+			<OtpInput
+				numberOfInputs={6}
+				customRowClass="inline-flex items-center "
+				customTextInputClass="w-10"
+				customInputWrapperClass="w-10"
+				customSeparatorClass="px-2"
+				bind:this={otpInstance}
+			/>
 			<svelte:fragment slot="footer">
-				<Button on:click={() => alert('Handle "success"')}>Done</Button>
+				<Button on:click={() => alert(otpInstance?.getValue().completevalue)}>Done</Button>
 			</svelte:fragment>
 		</Modal>
 	{:else}
