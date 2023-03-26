@@ -2,13 +2,19 @@
 	import { web3auth, accountApi, rpcClient, userData, accountAddr, provider } from '$lib/stores';
 	import { Button, Heading, Modal } from 'flowbite-svelte';
 	import { ethers } from 'ethers';
-	import { formatEther } from 'ethers/lib/utils';
+	import { formatEther, solidityKeccak256 } from 'ethers/lib/utils';
 	import toast from 'svelte-french-toast';
 	import { QRCodeImage } from 'svelte-qrcode-image';
 	import OtpInput from 'svelte-otp';
+	import TOTP from 'totp.js';
+	import { StandardMerkleTree } from '@openzeppelin/merkle-tree';
+	import { browser } from '$app/environment';
 
 	let isOpen = false;
 	let otpInstance: any;
+	let isTotpValid = false;
+	let totp: TOTP;
+	let totpUrl = '';
 
 	async function transfer() {
 		if (!$accountApi || !$rpcClient) return;
@@ -65,6 +71,45 @@
 		}
 		return bytecode !== '0x' ? true : false;
 	}
+
+	async function initModal() {
+		if (!browser) return;
+		const key = TOTP.randomKey();
+		console.log(key);
+		totp = new TOTP.HOTP(key);
+		const code = totp.genOTP();
+		totpUrl = `otpauth://totp/${$userData?.email}?issuer=magik&secret=${key}`;
+		isOpen = true;
+		genMerkle(16);
+	}
+
+	function genMerkle(n: number) {
+		const salt = 0xdeadbeef; // This should unique to each user
+		const timeStep = 30;
+		const count = n;
+		const movingFactorOffset = Math.floor(Date.now() / 1000 / timeStep);
+		const otps: number[] = [];
+		for (let i = 0; i < count; i++) {
+			otps.push(parseInt(totp.genOTP(movingFactorOffset + i)));
+			console.log(totp.genOTP(movingFactorOffset + i));
+		}
+
+		const values: String[][] = [];
+		for (let i = 0; i < 10; i++) {
+			const left = solidityKeccak256(['uint256', 'uint256'], [i, salt]);
+			const right = solidityKeccak256(['uint256', 'uint256'], [i, otps[i]]);
+
+			values.push([left, right]);
+		}
+
+		const tree = StandardMerkleTree.of(values, ['bytes32', 'bytes32']);
+
+		console.log('Merkle rendered (leaves are sorted):', tree.root);
+		console.log(tree.render());
+		return tree;
+	}
+
+	async function createWallet() {}
 </script>
 
 <section class="text-center mt-24">
@@ -106,13 +151,13 @@
 					error: 'Error sending transfer'
 				})}>Mint 0.5 WETH</Button
 		>
-		<Button on:click={() => (isOpen = true)}>Create wallet</Button>
+		<Button on:click={initModal}>Create wallet</Button>
 		<Modal title="Setup 2fa" bind:open={isOpen} autoclose>
 			<p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
 				Scan the following QR code with your authenticator app
 			</p>
 
-			<QRCodeImage text="hi" width={1000} margin={0} displayClass="w-48 mx-auto" />
+			<QRCodeImage text={totpUrl} width={1000} margin={0} displayClass="w-48 mx-auto" />
 			<OtpInput
 				numberOfInputs={6}
 				customRowClass="inline-flex items-center "
@@ -120,9 +165,10 @@
 				customInputWrapperClass="w-10"
 				customSeparatorClass="px-2"
 				bind:this={otpInstance}
+				on:notify={() => (isTotpValid = totp.verify(otpInstance?.getValue().completevalue))}
 			/>
 			<svelte:fragment slot="footer">
-				<Button on:click={() => alert(otpInstance?.getValue().completevalue)}>Done</Button>
+				<Button on:click={() => {}} disabled={!isTotpValid}>Done</Button>
 			</svelte:fragment>
 		</Modal>
 	{:else}

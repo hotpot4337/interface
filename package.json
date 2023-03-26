@@ -39,7 +39,8 @@
 	"type": "module",
 	"dependencies": {
 		"@account-abstraction/sdk": "^0.5.0",
-		"@openzeppelin/merkle-tree": "^1.0.2",
+		"@openzeppelin/merkle-tree": "^1.0.4",
+		"@otplib/preset-browser": "^12.0.1",
 		"@popperjs/core": "^2.11.6",
 		"@web3auth/base": "^5.0.1",
 		"@web3auth/modal": "^5.0.1",
@@ -49,9 +50,12 @@
 		"ethers": "^5.7.2",
 		"flowbite": "^1.6.3",
 		"flowbite-svelte": "^0.30.6",
+		"otplib": "^12.0.1",
+		"speakeasy": "^2.0.0",
 		"svelte-french-toast": "^1.0.4-beta.0",
 		"svelte-local-storage-store": "^0.4.0",
 		"svelte-otp": "^1.0.9",
-		"svelte-qrcode-image": "^1.0.0-rc.2"
+		"svelte-qrcode-image": "^1.0.0-rc.2",
+		"totp.js": "^0.0.1"
 	}
 }
