@@ -52,6 +52,7 @@ web3auth.subscribe(async (web3auth) => {
 
 	merkleTree.subscribe(async (tree) => {
 		if (!tree) return;
+		console.log('Setting AccApi with merkle root ', tree.root);
 		const accApi = new ComplexAccountAPI({
 			provider,
 			merkleRoot: tree.root,

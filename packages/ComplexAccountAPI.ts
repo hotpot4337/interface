@@ -1,4 +1,6 @@
 import { type BigNumberish, BigNumber, utils } from 'ethers';
+import { ecsign, toRpcSig, keccak256 as keccak256_buffer } from 'ethereumjs-util';
+
 // import {
 //   SimpleAccount,
 //   SimpleAccount__factory, SimpleAccountFactory,
@@ -9,7 +11,7 @@ import { ComplexAccount__factory } from './contracts/types/factories/ComplexAcco
 import { ComplexAccountFactory__factory } from './contracts/types/factories/ComplexAccountFactory__factory';
 import type { ComplexAccount, ComplexAccountFactory } from './contracts/dist'; // gen with scripts/prepack-contracts-package.sh
 
-import { arrayify, hexConcat } from 'ethers/lib/utils';
+import { arrayify, hexConcat, hexlify, splitSignature, zeroPad } from 'ethers/lib/utils';
 import type { Signer } from '@ethersproject/abstract-signer';
 import { type BaseApiParams, BaseAccountAPI } from './sdk/src/BaseAccountAPI'; // './BaseAccountAPI'
 /**
@@ -112,7 +114,42 @@ export class ComplexAccountAPI extends BaseAccountAPI {
 		return accountContract.interface.encodeFunctionData('execute', [target, value, data]);
 	}
 
-	async signUserOpHash(userOpHash: string): Promise<string> {
-		return await this.owner.signMessage(arrayify(userOpHash));
+	async signUserOpHash(
+		userOpHash: string,
+		proof: string[],
+		saltHash: string,
+		nInterval: number,
+		totpCode: number
+	): Promise<string> {
+		console.log(proof, saltHash, nInterval, totpCode);
+		const sig = await this.owner.signMessage(arrayify(userOpHash));
+
+		const signedMessage1B = arrayify(sig);
+
+		// B for bytes (Uint8Array)
+		console.log('S', saltHash);
+		const saltHashB = arrayify(saltHash);
+		const nIntervalB = zeroPad(hexlify([nInterval]), 32);
+		const totpCodeB = zeroPad(arrayify(`0x0${totpCode.toString(16)}`), 32);
+		const proofBArr: Uint8Array[] = [];
+		proof.forEach((leaf) => {
+			proofBArr.push(arrayify(leaf));
+		});
+		let proofB: Uint8Array = new Uint8Array();
+		proofBArr.forEach((leafB) => {
+			proofB = arrayify([...proofB, ...leafB]);
+		});
+		const proofLenB = zeroPad(arrayify(`0x0${proof.length.toString(16)}`), 2);
+
+		const byteArray: Uint8Array = arrayify([
+			...saltHashB,
+			...nIntervalB,
+			...totpCodeB,
+			...proofLenB,
+			...proofB,
+			...signedMessage1B
+		]);
+		const signatureString = hexlify(byteArray);
+		return signatureString;
 	}
 }

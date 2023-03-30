@@ -23,20 +23,107 @@
 	let isTotpValid = false;
 	let totp: TOTP;
 	let totpUrl = '';
+	function getTOTPByInterval(interval: number): number {
+		const codez = [
+			829868, 599210, 550111, 335494, 142679, 194260, 94507, 481019, 882821, 944678, 775843, 905116,
+			513504, 478870, 555515, 692347, 453302, 721259, 745391, 622246, 163111, 490131, 86960, 845996,
+			205617, 572258, 846287, 383159, 402593, 472473, 548055, 765519, 832873, 241454, 100441, 72731,
+			72624, 715378, 713035, 543461, 528216, 399547, 380249, 418717, 590977, 515900, 17271, 605114,
+			31861, 192496, 305144, 569166, 622794, 636149, 260463, 156346, 333927, 166123, 95479, 231230,
+			16248, 562947, 873320, 832918, 783404, 289122, 122312, 629719, 846749, 23894, 986524, 612000,
+			352963, 620762, 766099, 862553, 794643, 755589, 881995, 937853, 426760, 311903, 556027,
+			227710, 70533, 7226, 997671, 24333, 996863, 776623, 31836, 67757, 995985, 90688, 184099,
+			590653, 354748, 760921, 58694, 154526
+		];
+		return codez[interval];
+	}
+
+	function mtest(): StandardMerkleTree<String[]> {
+		// const salt = 0xdeadbeef;
+		// const values: String[][] = [];
+		// const intervalOffset = 0;
+		// for (let i = 0; i < 10; i++) {
+		// 	// left/right pseudo-leaves, must be provided in addition to witness proving we can hash to the leaf, even after leaves are sorted
+		// 	const left = solidityKeccak256(['uint256', 'uint256'], [i, salt]);
+		// 	const right = solidityKeccak256(
+		// 		['uint256', 'uint256'],
+		// 		[i, getTOTPByInterval(intervalOffset + i)]
+		// 	);
+		// 	values.push([left, right]);
+		// }
+		// // (2)
+		// const tree = StandardMerkleTree.of(values, ['bytes32', 'bytes32']);
+		// // (3)
+		// console.log('Merkle Root:', tree.root);
+		// console.log('Merkle rendered (leaves are sorted):', tree.root);
+		// console.log(tree.render());
+		// return tree;
+
+		const salt = 0xdeadbeef;
+
+		const values: String[][] = [];
+		const intervalOffset = 0;
+		for (let i = 0; i < 10; i++) {
+			// left/right pseudo-leaves, must be provided in addition to witness proving we can hash to the leaf, even after leaves are sorted
+			const left = solidityKeccak256(['uint256', 'uint256'], [i, salt]);
+			const right = solidityKeccak256(
+				['uint256', 'uint256'],
+				[i, getTOTPByInterval(intervalOffset + i)]
+			);
+
+			values.push([left, right]);
+		}
+
+		// (2)
+		const tree = StandardMerkleTree.of(values, ['bytes32', 'bytes32']);
+
+		// (3)
+		console.log('Merkle Root:', tree.root);
+		console.log('Merkle rendered (leaves are sorted):', tree.root);
+		console.log(tree.render());
+		return tree;
+	}
 
 	async function transfer() {
-		if (!$accountApi || !$rpcClient) return;
+		if (!$accountApi || !$rpcClient || !$merkleTree) return;
+		const salt = 0xdeadbeef;
 		const target = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
 		const value = ethers.utils.parseEther('1');
+		// const offset = Math.floor(Date.now() / 1000 / 30);
+		// const n = offset - $merkleTree.startingN;
+		// console.log(n);
 
-		const op = await $accountApi.createSignedUserOp({
-			target,
-			value,
-			data: '0x'
-		});
+		// const salt = 0xdeadbeef;
+		// const totpCode = parseInt(totp.genOTP(offset));
+		// console.log(totpCode);
+
+		// const saltHash = solidityKeccak256(['uint256', 'uint256'], [n, salt]);
+		// console.log(saltHash);
+		// const totpHash = solidityKeccak256(['uint256', 'uint256'], [n, totpCode]);
+		// const proof = $merkleTree.getProof([saltHash, totpHash]);
+		// console.log('proof', proof);
+
+		const totpCode = 829868;
+		const saltHash = solidityKeccak256(['uint256', 'uint256'], [0, salt]);
+		const totpHash = solidityKeccak256(['uint256', 'uint256'], [0, totpCode]);
+
+		const proof = $merkleTree.getProof([saltHash, totpHash]);
+
+		const op = await $accountApi.createSignedUserOp(
+			{
+				target,
+				value,
+				data: '0x'
+			},
+			proof,
+			saltHash,
+			0,
+			totpCode
+		);
 
 		const uoHash = await $rpcClient.sendUserOpToBundler(op);
 		console.log(`UserOpHash: ${uoHash}`);
+		console.log('Hi');
 
 		console.log('Waiting for transaction...');
 		const txHash = await $accountApi.getUserOpReceipt(uoHash);
@@ -88,13 +175,13 @@
 		const code = totp.genOTP();
 		totpUrl = `otpauth://totp/${$userData?.email}?issuer=magik&secret=${key}`;
 		isOpen = true;
-		$merkleTree = genMerkle(16);
+		$merkleTree = mtest();
 	}
 
-	function genMerkle(n: number) {
-		const salt = 0xdeadbeef; // This should unique to each user
+	function genMerkle(amount: number) {
+		const salt = 0xdeadbeef; // This should be unique to each user
 		const timeStep = 30;
-		const count = n;
+		const count = amount;
 		const movingFactorOffset = Math.floor(Date.now() / 1000 / timeStep);
 		const otps: number[] = [];
 		for (let i = 0; i < count; i++) {
@@ -103,7 +190,7 @@
 		}
 
 		const values: String[][] = [];
-		for (let i = 0; i < 10; i++) {
+		for (let i = 0; i < count; i++) {
 			const left = solidityKeccak256(['uint256', 'uint256'], [i, salt]);
 			const right = solidityKeccak256(['uint256', 'uint256'], [i, otps[i]]);
 
@@ -114,6 +201,7 @@
 
 		console.log('Merkle rendered (leaves are sorted):', tree.root);
 		console.log(tree.render());
+		tree.startingN = movingFactorOffset;
 		return tree;
 	}
 
@@ -144,14 +232,7 @@
 				</p>
 			</div>
 			<p>This wallet must contain eth to execute UserOps (unless a Paymaster is active)</p>
-			<Button
-				on:click={() =>
-					toast.promise(transfer(), {
-						loading: 'Transfering...',
-						success: 'Trasaction successful!',
-						error: 'Error sending transfer'
-					})}>Transfer 1 ETH</Button
-			>
+			<Button on:click={transfer}>Transfer 1 ETH</Button>
 			<Button
 				on:click={() =>
 					toast.promise(mintWETH(), {
