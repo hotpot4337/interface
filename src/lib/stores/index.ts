@@ -7,6 +7,11 @@ import { browser } from '$app/environment';
 import type { HttpRpcClient } from '@account-abstraction/sdk/dist/src/HttpRpcClient';
 import type { ComplexAccountAPI } from '$packages/ComplexAccountAPI';
 import type { StandardMerkleTree } from '@openzeppelin/merkle-tree';
+import {
+	PUBLIC_RPC_URL,
+	PUBLIC_BUNDLER_URL,
+	PUBLIC_ACCOUNT_FACTORY_ADDRESS
+} from '$env/static/public';
 
 export const web3auth: Writable<Web3Auth> = writable();
 export const userData: Writable<Partial<UserInfo> | null> = persisted('user', null);
@@ -36,11 +41,11 @@ web3auth.subscribe(async (web3auth) => {
 	const provider = new ethers.providers.Web3Provider(web3auth.provider);
 
 	const config = {
-		rpcUrl: 'http://localhost:8545',
+		rpcUrl: PUBLIC_RPC_URL,
 		signingKey: provider.getSigner(),
-		entryPoint: '0xF4E9c4961D3D24AE4259767E81c9A380aa524298',
+		entryPoint: '0x0576a174D229E3cFA37253523E645A78A0C91B57',
 		simpleAccountFactory: '0x15950998f3e5cF176DC0490209552Df5CB68Eb97',
-		bundlerUrl: 'http://localhost:3000/rpc'
+		bundlerUrl: PUBLIC_BUNDLER_URL
 	};
 
 	// const accApi = new SimpleAccountAPI({
@@ -51,14 +56,14 @@ web3auth.subscribe(async (web3auth) => {
 	// })
 
 	merkleTree.subscribe(async (tree) => {
-		if (!tree) return;
+		if (!tree?.root) return;
 		console.log('Setting AccApi with merkle root ', tree.root);
 		const accApi = new ComplexAccountAPI({
 			provider,
-			merkleRoot: tree.root,
 			entryPointAddress: config.entryPoint,
+			factoryAddress: PUBLIC_ACCOUNT_FACTORY_ADDRESS,
 			owner: provider.getSigner(),
-			factoryAddress: '0xea6AD1f5c2aC92E872EFd1DB2eF02157C875c16C'
+			merkleRoot: tree.root
 		});
 
 		accountApi.set(accApi);

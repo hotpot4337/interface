@@ -103,6 +103,11 @@ export class ComplexAccountAPI extends BaseAccountAPI {
 		return await accountContract.nonce();
 	}
 
+	async getMerkleRoot(): Promise<string> {
+		const accountContract = await this._getAccountContract();
+		return await accountContract.merkleRoot();
+	}
+
 	/**
 	 * encode a method call from entryPoint to our contract
 	 * @param target
@@ -121,13 +126,14 @@ export class ComplexAccountAPI extends BaseAccountAPI {
 		nInterval: number,
 		totpCode: number
 	): Promise<string> {
-		console.log(proof, saltHash, nInterval, totpCode);
 		const sig = await this.owner.signMessage(arrayify(userOpHash));
 
 		const signedMessage1B = arrayify(sig);
 
 		// B for bytes (Uint8Array)
-		console.log('S', saltHash);
+		console.log('Salthash', saltHash);
+		console.log('UserOp signature', sig);
+
 		const saltHashB = arrayify(saltHash);
 		const nIntervalB = zeroPad(hexlify([nInterval]), 32);
 		const totpCodeB = zeroPad(arrayify(`0x0${totpCode.toString(16)}`), 32);

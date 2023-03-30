@@ -22,7 +22,7 @@
 			class="self-center whitespace-nowrap text-xl font-semibold dark:text-white !text-blue"
 			gradient
 		>
-			Magik
+			FlowSafe
 		</Span>
 	</NavBrand>
 	<div class="flex md:order-2">
@@ -41,7 +41,7 @@
 			</Button>
 			<Dropdown>
 				<div slot="header" class="px-4 py-2">
-					<span class="block text-sm text-gray-900 dark:text-white">{$userData.email}</span>
+					<span class="block text-sm text-gray-900 dark:text-white">{$userData.name}</span>
 				</div>
 				<DropdownItem href="wallet">My wallet</DropdownItem>
 				<DropdownItem>Settings</DropdownItem>
@@ -56,7 +56,7 @@
 		<NavHamburger on:click={toggle} />
 	</div>
 	<NavUl class="order-1">
-		<NavLi href="/swap">Swap</NavLi>
+		<NavLi href="/swap" />
 	</NavUl>
 </Navbar>
 

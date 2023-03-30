@@ -12,6 +12,7 @@
 
 	import type { Web3AuthOptions } from '@web3auth/modal';
 	import { web3auth, userData } from '$lib/stores';
+	import { PUBLIC_CHAIN_ID, PUBLIC_RPC_URL } from '$env/static/public';
 
 	onMount(async () => {
 		window.Buffer = Buffer;
@@ -25,8 +26,8 @@
 			web3AuthNetwork: 'testnet',
 			chainConfig: {
 				chainNamespace: CHAIN_NAMESPACES.EIP155,
-				chainId: '0x539',
-				rpcTarget: 'http://localhost:8545/' // This is the public RPC we have added, please pass on your own endpoint while creating an app
+				chainId: PUBLIC_CHAIN_ID,
+				rpcTarget: PUBLIC_RPC_URL // This is the public RPC we have added, please pass on your own endpoint while creating an app
 			},
 			uiConfig: {
 				theme: 'light',
@@ -36,6 +37,7 @@
 		};
 
 		const w3a = new Web3Auth(w3aOptions);
+		if (!w3a) return;
 		await w3a.initModal();
 		$web3auth = w3a;
 		$userData = await w3a.getUserInfo();
@@ -63,7 +65,7 @@
 	<footer>
 		<a href="https://github.com/" class="flex items-center text-sm gap-1">
 			<img src={github} alt="GitHub" class="w-6" />
-			Created at Scaling Ethereum 2023 hackathon
+			Created at March Account Abstraction Hackathon
 		</a>
 	</footer>
 </div>
